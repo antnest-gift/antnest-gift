@@ -1,44 +1,179 @@
 <!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Antnest Gift - Quản lý đơn hàng</title>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Antnest Gift | Quản lý đơn hàng</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--navy:#173f63;--bg:#f4f7fa;--line:#e2e8f0}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial;color:#172536}header{background:var(--navy);color:white;padding:15px 22px;display:flex;justify-content:space-between;align-items:center}button{border:0;border-radius:8px;padding:10px 14px;background:var(--navy);color:white;cursor:pointer;font-weight:bold}input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:7px}label{display:block;margin:12px 0 5px;font-weight:bold}.wrap{max-width:1180px;margin:22px auto;padding:0 14px}.card{background:white;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:15px}.login{max-width:420px;margin:9vh auto}.hidden{display:none!important}.layout{display:grid;grid-template-columns:210px 1fr;gap:15px}.nav button{display:block;width:100%;text-align:left;background:white;color:#173f63;margin-bottom:5px}.nav button.active{background:#eaf1f7}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{background:#eef4f8;padding:16px;border-radius:9px}.stat b{font-size:24px;display:block;color:#173f63;margin-top:8px}.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 12px}.full{grid-column:1/-1}.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.secondary{background:#e7eef5;color:#173f63}.notice{padding:10px;background:#eff6ff;border-radius:8px;margin:10px 0}.error{background:#fef2f2;color:#991b1b}.ok{background:#ecfdf3;color:#067647}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:600px;margin-top:12px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}th{background:#edf3f8}@media(max-width:700px){.layout{grid-template-columns:1fr}.nav{display:flex;overflow:auto}.nav button{white-space:nowrap;width:auto}.grid{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}}
-</style></head><body>
-<header><div><b>ANTNEST GIFT</b><br><small>HỆ THỐNG QUẢN LÝ ĐƠN HÀNG</small></div><div id="userarea" class="hidden"><span id="username"></span> <button id="logout" class="secondary">Đăng xuất</button></div></header>
-<section id="login" class="card login"><h2>Đăng nhập</h2><label>Email</label><input id="email" type="email"><label>Mật khẩu</label><input id="password" type="password"><div class="actions"><button id="loginbtn">Đăng nhập</button></div><div id="loginmsg"></div></section>
-<main id="app" class="wrap hidden"><div class="layout"><aside class="card nav">
-<button data-page="home" class="active">Tổng quan</button><button data-page="orders">Mã PO / Đơn hàng</button><button data-page="delivery">Yêu cầu giao nhận</button><button data-page="visits">Chi phí gặp khách</button><button data-page="expenses">Chi phí Admin</button><button data-page="archives">Lưu trữ hồ sơ</button></aside><section class="card"><h2 id="title">Tổng quan</h2><div id="content"></div></section></div></main>
+:root{--navy:#173f63;--blue:#235b86;--bg:#f3f6fa;--line:#dce4ed;--text:#1d2b3a;--muted:#64748b;--white:#fff;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Arial,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:8px;padding:10px 14px;background:var(--navy);color:#fff;font-weight:600}button.secondary{background:#e8eef5;color:var(--navy);border:1px solid var(--line)}button.danger{background:#b42318}button:disabled{opacity:.55;cursor:not-allowed}
+header{height:58px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;gap:12px}header b{font-size:16px}header small{display:block;margin-top:3px;opacity:.85}.header-right{display:flex;align-items:center;gap:12px}.header-right button{background:#fff;color:var(--navy)}
+main{max-width:1500px;margin:22px auto;padding:0 18px}.login-wrap{max-width:410px;margin:8vh auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:0 8px 30px #173f6310}.login-wrap h2{margin-top:0}.field{margin:12px 0}.field label{display:block;font-weight:600;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:var(--text)}.field textarea{min-height:76px;resize:vertical}.hint{color:var(--muted);font-size:12px}
+#app{display:none}.topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}.welcome h2{margin:0 0 5px}.welcome p{margin:0;color:var(--muted)}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0}.tabs button{background:#e6edf5;color:var(--navy);border:1px solid var(--line)}.tabs button.active{background:var(--navy);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin:14px 0}.stat,.panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}.stat span{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;font-size:25px;margin-top:8px;color:var(--navy)}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.panel-head h3{margin:0}.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tools input{padding:9px 11px;border:1px solid var(--line);border-radius:8px;min-width:220px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px}table{border-collapse:collapse;width:100%;min-width:760px;background:#fff}th,td{padding:11px 12px;border-bottom:1px solid #e8edf3;text-align:left;vertical-align:top}th{background:#f7f9fc;color:#475569;font-size:12px;white-space:nowrap}td{max-width:260px;overflow-wrap:anywhere}tr:last-child td{border-bottom:0}.actions{display:flex;gap:6px}.actions button{padding:6px 9px;font-size:12px}.empty{text-align:center;color:var(--muted);padding:28px}
+.badge{display:inline-block;border-radius:30px;background:#eaf2fb;color:#235b86;padding:4px 8px;font-size:12px}
+.modal-back{position:fixed;inset:0;background:#10253c77;display:none;align-items:center;justify-content:center;padding:18px;z-index:5}.modal{background:#fff;border-radius:14px;width:min(720px,100%);max-height:90vh;overflow:auto;padding:20px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.modal-head h3{margin:0}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.notice{padding:10px 12px;border-radius:8px;margin:12px 0;display:none}.notice.error{background:#fff0ef;color:#a1261b}.notice.ok{background:#eaf8ef;color:#176b37}
+@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr}header{padding:0 14px}main{padding:0 10px}.tools input{min-width:160px}}
+</style>
+</head>
+<body>
+<header><div><b>ANTNEST GIFT</b><small>HỆ THỐNG QUẢN LÝ ĐƠN HÀNG</small></div><div class="header-right"><span id="who" class="hint" style="color:#fff"></span><button id="logout" class="secondary" style="display:none">Đăng xuất</button></div></header>
+<main>
+<section id="login" class="login-wrap">
+<h2>Đăng nhập</h2><p class="hint">Sử dụng tài khoản đã được cấp quyền Antnest Gift.</p>
+<div id="loginmsg" class="notice error"></div>
+<form id="loginform"><div class="field"><label>Email</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label>Mật khẩu</label><input id="password" type="password" autocomplete="current-password" required></div><button type="submit" id="loginbtn">Đăng nhập</button></form>
+</section>
+<section id="app">
+<div class="topline"><div class="welcome"><h2>Quản lý hoạt động</h2><p>Dữ liệu dùng chung cho Quản lý và Nhân viên.</p></div><span class="badge" id="rolebadge">Tài khoản</span></div>
+<div id="appmsg" class="notice"></div>
+<div class="stats">
+<div class="stat"><span>Tổng đơn hàng</span><strong id="s-orders">0</strong></div>
+<div class="stat"><span>Khách hàng</span><strong id="s-customers">0</strong></div>
+<div class="stat"><span>Yêu cầu giao nhận</span><strong id="s-delivery">0</strong></div>
+<div class="stat"><span>Chi phí admin</span><strong id="s-expenses">0</strong></div>
+</div>
+<nav class="tabs" id="tabs"></nav>
+<section class="panel"><div class="panel-head"><h3 id="tabletitle">Đơn hàng</h3><div class="tools"><input id="search" placeholder="Tìm trong dữ liệu..."><button id="addbtn">+ Thêm mới</button><button class="secondary" id="refresh">Làm mới</button></div></div><div id="tablearea" class="table-wrap"></div></section>
+<p class="hint" style="margin:12px 2px">Mã PO được database tự động tạo khi thêm đơn hàng. Không nhập hoặc sửa mã PO thủ công.</p>
+</section>
+</main>
+<div id="modalback" class="modal-back"><div class="modal"><div class="modal-head"><h3 id="modaltitle">Thêm dữ liệu</h3><button class="secondary" id="closemodal">Đóng</button></div><div id="formmsg" class="notice error"></div><form id="recordform"><div class="form-grid" id="formfields"></div><div class="modal-actions"><button type="button" class="secondary" id="cancelmodal">Hủy</button><button type="submit" id="savebtn">Lưu dữ liệu</button></div></form></div></div>
 <script>
-const URL="https://upivzgkmebxdjzdagkky.supabase.co";
-const KEY="sb_publishable_fV5Ax1jPvQETRJkjgiosVw_oYoU8e2F";
-const db=window.supabase.createClient(URL,KEY);let user=null,profile=null,page="home";
-const $=x=>document.getElementById(x), esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function notice(id,s,cls="notice"){ $(id).innerHTML=`<div class="${cls}">${esc(s)}</div>`}
-async function start(u){user=u;let r=await db.from("profiles").select("*").eq("id",u.id).single();if(r.error){notice("loginmsg","Không tìm thấy hồ sơ người dùng. Báo quản lý kiểm tra.","error");return}profile=r.data;$("login").classList.add("hidden");$("app").classList.remove("hidden");$("userarea").classList.remove("hidden");$("username").textContent=profile.full_name||u.email;render()}
-$("loginbtn").onclick=async()=>{let r=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(r.error)notice("loginmsg",r.error.message,"error");else start(r.data.user)};
-$("logout").onclick=async()=>{await db.auth.signOut();location.reload()};
-db.auth.getSession().then(r=>{if(r.data.session)start(r.data.session.user)});
-document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>{page=b.dataset.page;document.querySelectorAll("[data-page]").forEach(x=>x.classList.toggle("active",x===b));render()});
-const f=(label,name,type="text",req=false)=>`<div><label>${label}</label><input name="${name}" type="${type}" ${req?"required":""}></div>`;
-const sel=(label,name,values)=>`<div><label>${label}</label><select name="${name}">${values.map(v=>`<option>${v}</option>`).join("")}</select></div>`;
-function shell(title,fields){return `<div class="card"><h3>${title}</h3><form id="entry"><div class="formgrid">${fields}</div><div class="actions"><button>Lưu thông tin</button><button type="reset" class="secondary">Nhập lại</button></div></form><div id="formmsg"></div></div>`}
-async function table(name,cols){let r=await db.from(name).select("*").order("created_at",{ascending:false}).limit(100);if(r.error)return `<div class="notice error">${esc(r.error.message)}</div>`;if(!r.data.length)return `<p>Chưa có dữ liệu.</p>`;return `<div class="tablewrap"><table><thead><tr>${cols.map(c=>`<th>${c[1]}</th>`).join("")}</tr></thead><tbody>${r.data.map(row=>`<tr>${cols.map(c=>`<td>${esc(row[c[0]])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`}
-async function render(){
-const titles={home:"Tổng quan",orders:"Mã PO / Đơn hàng",delivery:"Yêu cầu giao nhận",visits:"Chi phí gặp khách",expenses:"Chi phí Admin",archives:"Lưu trữ hồ sơ"};$("title").textContent=titles[page];
-if(page==="home"){let counts=await Promise.all(["orders","delivery_requests","archives"].map(t=>db.from(t).select("id",{count:"exact",head:true})));$("content").innerHTML=`<div class="grid"><div class="stat">Tổng đơn hàng<b>${counts[0].count||0}</b></div><div class="stat">Yêu cầu giao nhận<b>${counts[1].count||0}</b></div><div class="stat">Hồ sơ lưu trữ<b>${counts[2].count||0}</b></div></div><div class="notice">Đã kết nối cơ sở dữ liệu Antnest Gift. Dữ liệu hiển thị tùy theo các bản ghi đã nhập.</div>${await table("orders",[["po_code","Mã PO"],["customer_name","Khách hàng"],["sales_name","Sales"],["status","Trạng thái"]])}`;return}
-let cfg={
-orders:{t:"orders",fields:f("Tên khách hàng","customer_name","text",true)+f("Tên sales","sales_name")+f("Ngày đặt","order_date","date")+sel("Trạng thái","status",["Đang xử lý","Đã xác nhận","Đang sản xuất","Hoàn thành","Đã hủy"])+`<div class="full"><label>Ghi chú</label><textarea name="note"></textarea></div>`,cols:[["po_code","Mã PO"],["customer_name","Khách hàng"],["sales_name","Sales"],["status","Trạng thái"],["order_date","Ngày đặt"]]},
-delivery:{t:"delivery_requests",fields:f("Ngày yêu cầu","request_date","date")+f("Người yêu cầu","requester")+f("Loại hồ sơ","document_type")+f("Tên khách hàng","customer_name")+f("Hình thức giao","delivery_method")+f("Địa chỉ","address")+f("Tên người nhận","receiver_name")+f("SĐT người nhận","receiver_phone")+sel("Trạng thái","status",["Chờ xử lý","Đang giao","Giao thành công","Thất bại"])+f("Chi phí giao","delivery_cost","number")+f("Mã Viettel Post","viettel_post_code")+f("Mã PO liên quan","po_code"),cols:[["request_date","Ngày yêu cầu"],["requester","Người yêu cầu"],["customer_name","Khách hàng"],["status","Trạng thái"],["delivery_cost","Chi phí"]]},
-visits:{t:"customer_visits",fields:f("Tên sales","sales_name")+f("Ngày gặp","visit_date","date")+f("Nội dung cuộc gặp","content")+f("Tên công ty","company_name")+f("Điểm đi","origin")+f("Điểm đến","destination")+f("Công tác phí","expense","number")+sel("Trạng thái duyệt","approval_status",["Chờ duyệt","Đã duyệt","Từ chối"])+f("Mã PO liên quan","po_code"),cols:[["visit_date","Ngày gặp"],["sales_name","Sales"],["company_name","Công ty"],["approval_status","Duyệt"],["expense","Chi phí"]]},
-expenses:{t:"admin_expenses",fields:f("Nội dung chi","content","text",true)+f("Ngày chi","expense_date","date")+f("Số tiền","amount","number")+f("Link chứng từ","receipt_url")+f("Mã PO liên quan","po_code")+`<div class="full"><label>Ghi chú</label><textarea name="note"></textarea></div>`,cols:[["expense_date","Ngày"],["content","Nội dung"],["amount","Số tiền"],["note","Ghi chú"]]},
-archives:{t:"archives",fields:f("Ngày nhận","received_date","date")+f("Người/đơn vị giao","sender")+f("Loại hồ sơ","document_type")+f("Khách hàng","customer_name")+f("Số lượng","quantity","number")+f("Tình trạng khi nhận","receiving_condition")+sel("Trạng thái","status",["Đã lưu trữ","Chờ bổ sung","Đang xử lý"])+f("Link file","file_url")+f("Mã PO liên quan","po_code"),cols:[["received_date","Ngày nhận"],["sender","Người giao"],["customer_name","Khách hàng"],["status","Trạng thái"],["file_url","Link file"]]}
-}[page];
-$("content").innerHTML=shell("Thêm thông tin",cfg.fields)+"<h3>Danh sách gần đây</h3>"+await table(cfg.t,cfg.cols);
-$("entry").onsubmit=async ev=>{ev.preventDefault();let row=Object.fromEntries(new FormData(ev.target).entries());row.created_by=user.id;
-if(row.po_code){let q=await db.from("orders").select("id").eq("po_code",row.po_code.trim()).maybeSingle();if(q.data)row.po_id=q.data.id;delete row.po_code}
-["delivery_cost","expense","amount","quantity"].forEach(k=>{if(row[k]==="")delete row[k];else if(row[k]!=null)row[k]=Number(row[k])});
-let r=await db.from(cfg.t).insert(row);if(r.error)notice("formmsg",r.error.message,"error");else{notice("formmsg","Đã lưu thành công.","ok");render()}
+(() => {
+const SUPABASE_URL = 'https://upivzgkmebxdjzdagkky.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_fV5Ax1jPvQETRJkjgiosVw_oYoU8e2F';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let currentUser=null, currentProfile=null, active='orders', rows=[], editing=null, ordersCache=[];
+const today = new Date().toISOString().slice(0,10);
+const configs = {
+ orders:{title:'Mã PO / Đơn hàng',table:'orders',cols:[
+  ['po_code','Mã PO','readonly'],['customer_name','Tên khách hàng','text',true],['sales_name','Nhân viên phụ trách','text',true],['order_date','Ngày đặt hàng','date',true],['status','Trạng thái','text'],['note','Ghi chú','textarea']
+ ],show:['po_code','customer_name','sales_name','order_date','status','created_at'],search:['po_code','customer_name','sales_name','status']},
+ customers:{title:'Khách hàng',table:'customers',cols:[['name','Tên khách hàng','text',true],['phone','Số điện thoại','tel'],['email','Email','email'],['address','Địa chỉ','text'],['note','Ghi chú','textarea']],show:['name','phone','email','address','note'],search:['name','phone','email','address']},
+ order_items:{title:'Chi tiết sản phẩm',table:'order_items',cols:[['order_id','Đơn hàng','order'],['product_code','Mã sản phẩm','text'],['product_name','Tên sản phẩm','text',true],['specification','Quy cách','text'],['quantity','Số lượng','number'],['unit_price','Đơn giá','number'],['note','Ghi chú','textarea']],show:['order_id','product_code','product_name','specification','quantity','unit_price','note'],search:['product_code','product_name','specification']},
+ delivery_requests:{title:'Yêu cầu giao nhận',table:'delivery_requests',cols:[['request_date','Ngày yêu cầu','date'],['requester','Người yêu cầu','text'],['document_type','Loại chứng từ','text'],['po_id','Đơn hàng','order'],['customer_name','Khách hàng','text'],['delivery_method','Hình thức giao','text'],['address','Địa chỉ giao','text'],['receiver_name','Người nhận','text'],['receiver_phone','SĐT người nhận','tel'],['status','Trạng thái','text'],['delivery_cost','Phí giao hàng','number'],['viettel_post_code','Mã vận đơn Viettel Post','text'],['note','Ghi chú','textarea']],show:['request_date','customer_name','delivery_method','receiver_name','receiver_phone','status','delivery_cost','viettel_post_code'],search:['customer_name','receiver_name','receiver_phone','viettel_post_code','status']},
+ customer_visits:{title:'Chi phí gặp khách',table:'customer_visits',cols:[['sales_name','Nhân viên','text'],['visit_date','Ngày gặp','date'],['content','Nội dung','textarea'],['po_id','Đơn hàng liên quan','order'],['company_name','Công ty khách hàng','text'],['origin','Điểm đi','text'],['destination','Điểm đến','text'],['approval_status','Trạng thái duyệt','text'],['expense','Chi phí','number']],show:['sales_name','visit_date','company_name','content','approval_status','expense'],search:['sales_name','company_name','content','approval_status']},
+ admin_expenses:{title:'Chi phí Admin',table:'admin_expenses',cols:[['content','Nội dung chi phí','text',true],['po_id','Đơn hàng liên quan','order'],['expense_date','Ngày chi','date'],['amount','Số tiền','number'],['receipt_url','Link hóa đơn','url'],['note','Ghi chú','textarea']],show:['content','expense_date','amount','receipt_url','note'],search:['content','note']},
+ archives:{title:'Lưu trữ hồ sơ',table:'archives',cols:[['received_date','Ngày nhận','date'],['sender','Người gửi','text'],['document_type','Loại hồ sơ','text'],['customer_name','Khách hàng','text'],['po_id','Đơn hàng liên quan','order'],['quantity','Số lượng','number'],['receiving_condition','Tình trạng tiếp nhận','text'],['status','Trạng thái lưu trữ','text'],['file_url','Link hồ sơ','url'],['note','Ghi chú','textarea']],show:['received_date','sender','document_type','customer_name','quantity','status','file_url'],search:['sender','document_type','customer_name','status']},
 };
+const tabOrder=['orders','customers','order_items','delivery_requests','customer_visits','admin_expenses','archives'];
+const labels={id:'ID',po_code:'Mã PO',customer_name:'Khách hàng',sales_name:'Nhân viên',order_date:'Ngày đặt',status:'Trạng thái',created_at:'Ngày tạo',name:'Tên khách hàng',phone:'Điện thoại',email:'Email',address:'Địa chỉ',note:'Ghi chú',order_id:'Đơn hàng',product_code:'Mã SP',product_name:'Sản phẩm',specification:'Quy cách',quantity:'Số lượng',unit_price:'Đơn giá',request_date:'Ngày yêu cầu',requester:'Người yêu cầu',document_type:'Loại chứng từ',delivery_method:'Hình thức giao',receiver_name:'Người nhận',receiver_phone:'SĐT người nhận',delivery_cost:'Phí giao',viettel_post_code:'Mã vận đơn',visit_date:'Ngày gặp',content:'Nội dung',company_name:'Công ty',origin:'Điểm đi',destination:'Điểm đến',approval_status:'Duyệt',expense:'Chi phí',expense_date:'Ngày chi',amount:'Số tiền',receipt_url:'Link hóa đơn',received_date:'Ngày nhận',sender:'Người gửi',receiving_condition:'Tình trạng',file_url:'Link hồ sơ'};
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showMsg(el,msg,type='error'){el.textContent=msg;el.className='notice '+type;el.style.display='block';}
+function hideMsg(el){el.style.display='none';}
+function money(v){return v==null||v===''?'':Number(v).toLocaleString('vi-VN')+' đ';}
+function buildTabs(){ $('tabs').innerHTML=tabOrder.map(k=>`<button data-tab="${k}" class="${active===k?'active':''}">${configs[k].title}</button>`).join('');$('tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{active=b.dataset.tab;buildTabs();loadData();});}
+async function loadProfile(user){
+ const {data,error}=await db.from('profiles').select('id,full_name,role').eq('id',user.id).maybeSingle();
+ if(error) throw error;
+ if(!data) throw new Error('Tài khoản chưa có hồ sơ trong bảng profiles. Vui lòng nhờ Quản lý kiểm tra phân quyền.');
+ currentProfile=data;
 }
-</script></body></html>
+async function startApp(user){
+ currentUser=user; await loadProfile(user);
+ $('login').style.display='none';$('app').style.display='block';$('logout').style.display='inline-block';
+ $('who').textContent=currentProfile.full_name||user.email;
+ $('rolebadge').textContent=(currentProfile.role==='manager'?'Quản lý':'Nhân viên')+' · '+(currentProfile.full_name||'');
+ buildTabs(); await loadStats(); await loadData();
+}
+async function loadStats(){
+ for(const [key,id] of [['orders','s-orders'],['customers','s-customers'],['delivery_requests','s-delivery'],['admin_expenses','s-expenses']]){
+  const {count,error}=await db.from(key).select('*',{count:'exact',head:true});
+  if(!error) $(id).textContent=count??0;
+ }
+}
+function displayVal(key,val){
+ if(val==null)return '';
+ if(['amount','expense','unit_price','delivery_cost'].includes(key))return money(val);
+ if(key==='order_id'||key==='po_id'){const o=ordersCache.find(x=>x.id===val);return o?o.po_code||o.customer_name:val;}
+ if(key.endsWith('_at'))return new Date(val).toLocaleString('vi-VN');
+ return String(val);
+}
+async function loadData(){
+ $('tabletitle').textContent=configs[active].title;
+ $('tablearea').innerHTML='<div class="empty">Đang tải dữ liệu...</div>';
+ if(!ordersCache.length || active==='orders'){const r=await db.from('orders').select('id,po_code,customer_name').order('created_at',{ascending:false});if(!r.error)ordersCache=r.data||[];}
+ const c=configs[active];
+ let q=db.from(c.table).select('*');
+ const orderCol=active==='orders'||active==='customers'?'created_at':active==='delivery_requests'?'request_date':active==='customer_visits'?'visit_date':active==='admin_expenses'?'expense_date':active==='archives'?'received_date':'id';
+ q=q.order(orderCol,{ascending:false});
+ const {data,error}=await q.limit(500);
+ if(error){$('tablearea').innerHTML=`<div class="empty">Không tải được dữ liệu: ${esc(error.message)}</div>`;return;}
+ rows=data||[]; renderTable();
+}
+function renderTable(){
+ const c=configs[active],term=$('search').value.trim().toLowerCase();
+ const filtered=rows.filter(r=>!term||(c.search||[]).some(k=>String(r[k]??'').toLowerCase().includes(term)));
+ if(!filtered.length){$('tablearea').innerHTML='<div class="empty">Chưa có dữ liệu. Nhấn “Thêm mới” để tạo bản ghi.</div>';return;}
+ const cols=c.show;
+ $('tablearea').innerHTML=`<table><thead><tr>${cols.map(k=>`<th>${esc(labels[k]||k)}</th>`).join('')}<th>Thao tác</th></tr></thead><tbody>${filtered.map(r=>`<tr>${cols.map(k=>`<td>${esc(displayVal(k,r[k]))}</td>`).join('')}<td><div class="actions"><button class="secondary" data-edit="${r.id}">Sửa</button><button class="danger" data-del="${r.id}">Xóa</button></div></td></tr>`).join('')}</tbody></table>`;
+ $('tablearea').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openForm(rows.find(r=>r.id===b.dataset.edit)));
+ $('tablearea').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>deleteRow(b.dataset.del));
+}
+function openForm(row=null){
+ editing=row; hideMsg($('formmsg'));$('modaltitle').textContent=(row?'Sửa ':'Thêm ')+configs[active].title;
+ const c=configs[active];$('formfields').innerHTML='';
+ c.cols.forEach(([key,label,type,required])=>{
+  if(type==='readonly'&&!row)return;
+  let value=row?.[key]??(type==='date'?today:key==='sales_name'?(currentProfile.full_name||''):'');
+  let field=document.createElement('div');field.className='field';
+  let control='';
+  if(type==='textarea')control=`<textarea id="f_${key}">${esc(value)}</textarea>`;
+  else if(type==='order'){
+   control=`<select id="f_${key}"><option value="">-- Chọn đơn hàng --</option>${ordersCache.map(o=>`<option value="${esc(o.id)}" ${value===o.id?'selected':''}>${esc((o.po_code||'Chưa có mã')+' · '+(o.customer_name||''))}</option>`).join('')}</select>`;
+  } else if(type==='readonly')control=`<input id="f_${key}" value="${esc(value)}" readonly>`;
+  else control=`<input id="f_${key}" type="${type||'text'}" value="${esc(value)}" ${required?'required':''} ${type==='number'?'step="any" min="0"':''}>`;
+  field.innerHTML=`<label>${esc(label)}${required?' *':''}</label>${control}`;
+  $('formfields').appendChild(field);
+ });
+ $('modalback').style.display='flex';
+}
+function closeForm(){$('modalback').style.display='none';editing=null;}
+async function saveRecord(ev){
+ ev.preventDefault();hideMsg($('formmsg'));const c=configs[active],payload={};
+ for(const [key,label,type] of c.cols){
+  if(type==='readonly')continue;
+  const el=$('f_'+key);if(!el)continue;
+  let v=el.value.trim();
+  payload[key]=v===''?null:(type==='number'?Number(v):v);
+ }
+ if(active==='orders'){payload.created_by=currentUser.id;}
+ else if(['order_items','delivery_requests','customer_visits','admin_expenses','archives'].includes(active)){payload.created_by=currentUser.id;}
+ try{
+  $('savebtn').disabled=true;
+  let result;
+  if(editing) result=await db.from(c.table).update(payload).eq('id',editing.id).select().single();
+  else result=await db.from(c.table).insert(payload).select().single();
+  if(result.error)throw result.error;
+  closeForm();await loadData();await loadStats();
+  if(active==='orders'&&result.data?.po_code)showMsg($('appmsg'),'Đã tạo đơn hàng. Mã PO: '+result.data.po_code,'ok');
+ }catch(e){showMsg($('formmsg'),e.message||'Có lỗi khi lưu dữ liệu.');}
+ finally{$('savebtn').disabled=false;}
+}
+async function deleteRow(id){
+ if(!confirm('Bạn chắc chắn muốn xóa bản ghi này?'))return;
+ const {error}=await db.from(configs[active].table).delete().eq('id',id);
+ if(error){showMsg($('appmsg'),'Không thể xóa: '+error.message);return;}
+ await loadData();await loadStats();
+}
+$('loginform').addEventListener('submit',async e=>{
+ e.preventDefault();hideMsg($('loginmsg'));$('loginbtn').disabled=true;
+ const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+ $('loginbtn').disabled=false;
+ if(error){showMsg($('loginmsg'),'Đăng nhập không thành công: '+error.message);return;}
+ try{await startApp(data.user);}catch(err){await db.auth.signOut();showMsg($('loginmsg'),err.message||'Không đọc được hồ sơ tài khoản.');}
+});
+$('logout').onclick=async()=>{await db.auth.signOut();location.reload();};
+$('addbtn').onclick=()=>openForm();$('refresh').onclick=async()=>{await loadStats();await loadData();};$('search').oninput=renderTable;
+$('recordform').addEventListener('submit',saveRecord);$('closemodal').onclick=closeForm;$('cancelmodal').onclick=closeForm;
+$('modalback').addEventListener('click',e=>{if(e.target===$('modalback'))closeForm();});
+db.auth.getSession().then(async({data})=>{if(data.session){try{await startApp(data.session.user);}catch(e){showMsg($('loginmsg'),e.message);}}});
+db.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_OUT'){currentUser=null;$('app').style.display='none';$('login').style.display='block';$('logout').style.display='none';}});
+})();
+</script>
+</body></html>
